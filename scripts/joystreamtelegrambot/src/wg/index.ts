@@ -7,6 +7,7 @@ import {
   getBlockHash,
   getWorkerReward,
   getStake,
+  connectApi,
 } from "../lib/api";
 import {
   getApplication,
@@ -29,13 +30,16 @@ import {
   getWorkerRewardAmountUpdatedEmbed,
   getWorkerTerminatedEmbed,
 } from "./embeds";
-
-import { wgEvents } from "../../config";
+import { Header } from '@polkadot/types/interfaces'
+import { wgEvents, channelNames, wsLocation } from "../../config";
 import { DiscordChannels } from "../types";
 import { ApiPromise } from "@polkadot/api";
 import { MintBalanceOf, MintId } from "@joystream/types/mint";
 import { ApplicationId, OpeningId } from "@joystream/types/hiring";
 import { RationaleText, WorkerId } from "@joystream/types/working-group";
+import { Stake } from "@joystream/types/stake";
+import Discord, { Intents } from "discord.js";
+import { getDiscordChannels } from "../util";
 
 export const processGroupEvents = (
   api: ApiPromise,
@@ -49,7 +53,7 @@ export const processGroupEvents = (
       let { section, method, data } = value.event;
       if (
         wgEvents.includes(method) &&
-        Object.keys(channels).includes(section)
+        Object.keys(channelNames).includes(section)
       ) {
         console.log(`${blockNumber} ${section} ${method} ${data.toHuman()}`);
         const channel = channels[section];
@@ -364,10 +368,11 @@ export const processGroupEvents = (
               stakeWorkerId.toNumber()
             );
             const stakeMember = await getMember(api, stakeWorker.member_id);
-            const stake = await getStake(
-              api,
-              stakeWorker.role_stake_profile.unwrap().stake_id
-            );
+            const stake: Stake | null = stakeWorker.role_stake_profile.isSome ? 
+              await getStake(
+                api,
+                stakeWorker.role_stake_profile.unwrap().stake_id
+              ) : null;
             channel.send({
               embeds: [
                 getStakeUpdatedEmbed(
@@ -378,9 +383,32 @@ export const processGroupEvents = (
                   value
                 ),
               ],
-            });
+            });                
             break;
         }
       }
     }
   );
+
+; (async () => {
+
+  const discordBotToken = process.env.TOKEN || undefined; // environment variable TOKEN must be set
+
+  const client = new Discord.Client({ intents: [Intents.FLAGS.GUILDS] });
+  client.login(discordBotToken).then(async () => {
+    console.log("Bot logged in successfully");
+    client.once("ready", async () => {
+      console.log('Discord.js client ready');
+      const channels: DiscordChannels = await getDiscordChannels(client);
+      const api: ApiPromise = await connectApi(wsLocation);
+      await api.isReady;
+      api.rpc.chain.subscribeFinalizedHeads(async (header: Header) => {
+        getBlockHash(api, +header.number).then((hash) =>
+          getEvents(api, hash).then((events: EventRecord[]) =>
+            processGroupEvents(api, +header.number, hash, events, channels)
+          )
+        )
+      })
+    });
+  });
+})()

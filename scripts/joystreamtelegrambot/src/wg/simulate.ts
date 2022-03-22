@@ -21,6 +21,8 @@ const eventsMapping = {
   BeganApplicationReview: 4276739,
   TerminatedLeader: 4282370,
   LeaderUnset: 4282370,
+  StakeSlashed: 4908750,
+  TerminatedWorker: 4908750
 };
 
 const discordBotToken = process.env.TOKEN || undefined; // environment variable TOKEN must be set
@@ -28,15 +30,17 @@ const discordBotToken = process.env.TOKEN || undefined; // environment variable 
 const client = new Discord.Client({ intents: [Intents.FLAGS.GUILDS] });
 client.login(discordBotToken).then(async () => {
   console.log("Bot logged in successfully");
-  const channels: DiscordChannels = await getDiscordChannels(client);
-
-  const api: ApiPromise = await connectApi(wsLocation);
-  await api.isReady;
-  Object.values(eventsMapping).forEach((block: number) =>
-    getBlockHash(api, block).then((hash) =>
-      getEvents(api, hash).then((events: EventRecord[]) =>
-        processGroupEvents(api, block, hash, events, channels)
+  client.once("ready", async () => {
+    console.log('Discord.js client ready');
+    const channels: DiscordChannels = await getDiscordChannels(client);
+    const api: ApiPromise = await connectApi(wsLocation);
+    await api.isReady;
+    Object.values(eventsMapping).forEach((block: number) =>
+      getBlockHash(api, block).then((hash) =>
+        getEvents(api, hash).then((events: EventRecord[]) =>
+          processGroupEvents(api, block, hash, events, channels)
+        )
       )
-    )
-  );
+    );
+  });
 });
