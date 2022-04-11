@@ -8,21 +8,27 @@ import { DiscordChannels } from "../types";
 import { processGroupEvents } from "./";
 
 const eventsMapping = {
-  MintCapacityChanged: 4211575,
-  OpeningFilled: 4206250,
-  OpeningAdded: 4224720,
-  OpeningAdded2: 4392577,
-  WorkerRewardAmountUpdated: 4389286,
-  WorkerRewardAmountUpdated2: 4222426,
-  AppliedOnOpening: 4264168,
-  AppliedOnOpening2: 4393863,
-  StakeIncreased: 4264798,
-  StakeDecreased: 4264862,
-  BeganApplicationReview: 4276739,
-  TerminatedLeader: 4282370,
-  LeaderUnset: 4282370,
-  StakeSlashed: 4908750,
-  TerminatedWorker: 4908750
+  BudgetRefill: 28800,
+  BudgetSet: 978,
+  BudgetUpdated: 103053,
+  OpeningFilled: 74353,
+  OpeningAdded: 43286,
+  OpeningAdded2: 125834,
+  OpeningCancelled: 44492,
+  WorkerRewardAmountUpdated: 112393,
+  WorkerRewardAmountUpdated2: 117500,
+  WorkerRoleAccountUpdated: 44513,
+  RewardPayment: 57600,
+  NewMissedRewardLevelReached: 57640,
+  AppliedOnOpening: 43405,
+  AppliedOnOpening2: 83269,
+  // StakeIncreased: 4264798,
+  // StakeDecreased: 4264862,
+//  BeganApplicationReview: 4276739,
+// TerminatedLeader: 4282370,
+  LeaderSet: 45047,
+  // StakeSlashed: 4908750,
+  // TerminatedWorker: 4908750
 };
 
 const discordBotToken = process.env.TOKEN || undefined; // environment variable TOKEN must be set

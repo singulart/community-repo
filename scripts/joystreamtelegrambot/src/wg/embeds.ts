@@ -1,12 +1,16 @@
 import { joystreamBlue } from '../../config'
 import { formatBalance } from '@polkadot/util';
-import { u128 } from '@polkadot/types';
 import { EventRecord } from '@polkadot/types/interfaces';
 import Discord from 'discord.js';
-import { ApplicationId, ApplicationOf, Membership, OpeningOf, RewardRelationship, Stake, StakingPolicy } from '@joystream/types/augment-codec/all';
+import { Membership } from '@joystream/types/augment-codec/all';
+import { OpeningId, Opening, ApplicationId, Application } from "@joystream/types/working-group";
+import { U128 } from "@polkadot/types";
+import { Stake } from '@joystream/types/stake';
+import { RewardRelationship } from '@joystream/types/recurring-rewards';
 
 
-export const getMintCapacityChangedEmbed = (minted: number, mint: u128, blockNumber: number, event: EventRecord): Discord.MessageEmbed => {
+
+export const getMintCapacityChangedEmbed = (minted: number, mint: U128, blockNumber: number, event: EventRecord): Discord.MessageEmbed => {
 
     return addCommonProperties(new Discord.MessageEmbed()
         .setTitle(`💰 💵 💸 💴 💶 ${formatBalance(minted, { withUnit: 'JOY' })} minted to the Treasury 💰 💵 💸 💴 💶 `)
@@ -15,35 +19,35 @@ export const getMintCapacityChangedEmbed = (minted: number, mint: u128, blockNum
         ), blockNumber, event );
 }
 
-export const getOpeningAddedEmbed = (opening: any, openingObject: OpeningOf, blockNumber: number, event: EventRecord): Discord.MessageEmbed => {
+export const getOpeningAddedEmbed = (id: OpeningId, opening: any, openingObject: Opening, blockNumber: number, event: EventRecord): Discord.MessageEmbed => {
 
     return addCommonProperties(new Discord.MessageEmbed()
         .setTitle(`⛩ ${opening.headline} ⛩`)
         .setDescription(opening.job.description)
         .addFields(
-            { name: 'ID', value: openingObject.hiring_opening_id + "", inline: true },
-            { name: 'Reward', value: opening.reward, inline: true },
-            { name: 'Application Stake', value: openingObject.policy_commitment.application_staking_policy.unwrapOr({} as StakingPolicy).amount?.toString() || 'Not Set', inline: true },
-            { name: 'Role Stake', value: openingObject.policy_commitment.role_staking_policy.unwrapOr({} as StakingPolicy).amount?.toString() || 'Not Set', inline: true },
+            { name: 'ID', value: id.toString(), inline: true },
+            { name: 'Reward', value: openingObject.reward_per_block.unwrapOr(0).toString(), inline: true },
+            { name: 'Application Stake', value: openingObject.creation_stake.toString(), inline: true },
+            { name: 'Role Stake', value: openingObject.stake_policy.stake_amount.toString(), inline: true },
             { name: 'Created By', value: opening.creator.membership.handle, inline: true },
         ), blockNumber, event );
 }
 
 export const getOpeningFilledEmbed = (opening: any, member: Membership, blockNumber: number, event: EventRecord): Discord.MessageEmbed => {
 
-    return addCommonProperties(new Discord.MessageEmbed().setTitle(`🎉 🥳 👏🏻 ${member.handle} was hired as ${opening.job.title} 🎉 🥳 👏🏻`), blockNumber, event );
+    return addCommonProperties(new Discord.MessageEmbed().setTitle(`🎉 🥳 👏🏻 ${member.handle_hash.toString()} was hired as ${opening.job.title} 🎉 🥳 👏🏻`), blockNumber, event );
 }
 
-export const getAppliedOnOpeningEmbed = (applicationId: ApplicationId, application: ApplicationOf, 
+export const getAppliedOnOpeningEmbed = (applicationId: ApplicationId, application: Application, 
     openingText: any, hiringApplicationText: any, applicant: Membership, blockNumber: number, event: EventRecord): Discord.MessageEmbed => {
 
     return addCommonProperties(new Discord.MessageEmbed()
-        .setTitle(`🏛 ${applicant.handle} applied to opening ${openingText.job.title}`)
+        .setTitle(`🏛 ${applicant.handle_hash.toString()} applied to opening ${openingText.job.title}`)
         .setDescription(hiringApplicationText['About you']['What makes you a good fit for the job?'] || 'No description provided by applicant')
         .addFields(
             { name: 'Application ID', value: applicationId.toString(), inline: true},
             { name: 'Opening', value:  openingText.headline, inline: true},
-            { name: 'Applicant', value: `[${application.member_id}] ${hiringApplicationText['About you']['Your name']}`, inline: true},
+            { name: 'Applicant', value: `[${applicant.handle_hash.toString()}] ${hiringApplicationText['About you']['Your name']}`, inline: true},
         ), blockNumber, event );
 }
 
@@ -52,7 +56,7 @@ export const getWorkerRewardAmountUpdatedEmbed = (reward: RewardRelationship, me
     blockNumber: number, event: EventRecord): Discord.MessageEmbed => {
 
     return addCommonProperties(new Discord.MessageEmbed()
-        .setTitle(`💰💰💰 Salary of ${member.handle} updated`)
+        .setTitle(`💰💰💰 Salary of ${member.handle_hash.toString()} updated`)
         .addFields(
             { name: 'Salary', value: formatBalance(reward.amount_per_payout, { withUnit: 'JOY' }), inline: true },
             { name: 'Payout Frequency', value: reward.payout_interval + "", inline: true },
@@ -61,7 +65,7 @@ export const getWorkerRewardAmountUpdatedEmbed = (reward: RewardRelationship, me
 
 export const getLeaderSetEmbed = (member: Membership, blockNumber: number, event: EventRecord): Discord.MessageEmbed => {
 
-    return addCommonProperties(new Discord.MessageEmbed().setTitle(`🏛 ${member.handle} is a new Lead`), blockNumber, event );
+    return addCommonProperties(new Discord.MessageEmbed().setTitle(`🏛 ${member.handle_hash.toString()} is a new Lead`), blockNumber, event );
 }
 
 export const getLeaderUnsetEmbed = (blockNumber: number, event: EventRecord): Discord.MessageEmbed => {
@@ -83,29 +87,29 @@ export const getWorkerExitedOrTerminatedEmbed = (action: string, member: Members
     blockNumber: number, event: EventRecord): Discord.MessageEmbed => {
 
     return addCommonProperties(new Discord.MessageEmbed()
-        .setTitle(`🏛 Worker ${member.handle} has ${action}`)
+        .setTitle(`🏛 Worker ${member.handle_hash.toString()} has ${action}`)
         .addFields(
             { name: 'Reason', value: reason, inline: true },
         ), blockNumber, event );
 }
 
-export const getApplicationTerminatedEmbed = (applicationId: ApplicationId, application: ApplicationOf, member: Membership,
+export const getApplicationTerminatedEmbed = (applicationId: ApplicationId, application: Application, member: Membership,
     blockNumber: number, event: EventRecord): Discord.MessageEmbed => {
 
     return getApplicationTerminatedOrWithdrawEmbed("terminated", applicationId, application, member, blockNumber, event);
 }
 
-export const getApplicationWithdrawnEmbed = (applicationId: ApplicationId, application: ApplicationOf, member: Membership,
+export const getApplicationWithdrawnEmbed = (applicationId: ApplicationId, application: Application, member: Membership,
     blockNumber: number, event: EventRecord): Discord.MessageEmbed => {
 
     return getApplicationTerminatedOrWithdrawEmbed("withdrawn", applicationId, application, member, blockNumber, event);
 }
 
-export const getApplicationTerminatedOrWithdrawEmbed = (action: string, applicationId: ApplicationId, application: ApplicationOf, member: Membership,
+export const getApplicationTerminatedOrWithdrawEmbed = (action: string, applicationId: ApplicationId, application: Application, member: Membership,
     blockNumber: number, event: EventRecord): Discord.MessageEmbed => {
 
     return addCommonProperties(new Discord.MessageEmbed()
-        .setTitle(`🏛 Application of ${member.handle} ${action}`)
+        .setTitle(`🏛 Application of ${member.handle_hash.toString()} ${action}`)
         .addFields(
             { name: 'Application ID', value: applicationId.toString(), inline: true },
             { name: 'Opening ID', value: application.opening_id.toString(), inline: true },
@@ -115,18 +119,10 @@ export const getApplicationTerminatedOrWithdrawEmbed = (action: string, applicat
 export const getStakeUpdatedEmbed = (stake: Stake | null, member: Membership, action: string, blockNumber: number, event: EventRecord): Discord.MessageEmbed => {
     
     return addCommonProperties(new Discord.MessageEmbed()
-        .setTitle(`💰💰💰 ${member.handle}'s stake has been ${action}`)
+        .setTitle(`💰💰💰 ${member.handle_hash.toString()}'s stake has been ${action}`)
         .addFields(
             { name: 'Stake', value: stake ? formatBalance(stake.value.toString(), { withUnit: 'JOY' }) : 'Not Set', inline: true }
         ), blockNumber, event );
-}
-
-export const getBeganApplicationReviewEmbed = (opening: any, applicants: Membership[], blockNumber: number, event: EventRecord): Discord.MessageEmbed => {
-    return addCommonProperties(new Discord.MessageEmbed()
-        .setTitle(`🏛 🏛 🏛 Applications review for opening '${opening.job.title}' started!`)
-        .setDescription(`Applicants: \n${applicants.map((applicant: Membership) => 
-            `📁 **${applicant.handle}** [\`${applicant.controller_account}\`]`).join('\n')}`), 
-            blockNumber, event);
 }
 
 const addCommonProperties = (embed: Discord.MessageEmbed, blockNumber: number, event: EventRecord) => {

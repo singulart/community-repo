@@ -36,10 +36,11 @@ import { DiscordChannels } from "../types";
 import { ApiPromise } from "@polkadot/api";
 import { MintBalanceOf, MintId } from "@joystream/types/mint";
 import { ApplicationId, OpeningId } from "@joystream/types/hiring";
-import { RationaleText, WorkerId } from "@joystream/types/working-group";
+import { WorkerId } from "@joystream/types/working-group";
 import { Stake } from "@joystream/types/stake";
 import Discord, { Intents } from "discord.js";
 import { getDiscordChannels } from "../util";
+import { U128 } from "@polkadot/types";
 
 export const processGroupEvents = (
   api: ApiPromise,
@@ -62,7 +63,7 @@ export const processGroupEvents = (
 
         switch (method) {
           case "BeganApplicationReview":
-            const beganReviewId = data[0] as OpeningId;
+            const beganReviewId = data[0] as unknown as OpeningId;
             const beganReviewOpeningObject = await getOpening(
               api,
               section,
@@ -102,7 +103,7 @@ export const processGroupEvents = (
             });
             break;
           case "ApplicationTerminated":
-            const id = data[0] as ApplicationId;
+            const id = data[0] as unknown as ApplicationId;
             const terminatedApplication = await getApplication(
               api,
               section,
@@ -126,7 +127,7 @@ export const processGroupEvents = (
             });
             break;
           case "ApplicationWithdrawn":
-            const withdrawnId = data[0] as ApplicationId;
+            const withdrawnId = data[0] as unknown as ApplicationId;
             const withdrawnApplication = await getApplication(
               api,
               section,
@@ -150,8 +151,8 @@ export const processGroupEvents = (
             });
             break;
           case "AppliedOnOpening":
-            const applicationOpeningId = data[0] as OpeningId;
-            const applicationId = data[1] as ApplicationId;
+            const applicationOpeningId = data[0] as unknown as OpeningId;
+            const applicationId = data[1] as unknown as ApplicationId;
             const application = await getApplication(
               api,
               section,
@@ -197,9 +198,9 @@ export const processGroupEvents = (
             });
             break;
           case "MintCapacityChanged":
-            const mintId = (data[0] as MintId).toNumber();
-            const minted = (data[1] as MintBalanceOf).toNumber();
-            const mint = (await getMint(api, hash, mintId)).capacity;
+            const mintId = (data[0] as unknown as MintId).toNumber();
+            const minted = (data[1] as unknown as MintBalanceOf).toNumber();
+            const mint: U128 = (await getMint(api, hash, mintId)).capacity as unknown as U128;
             channel.send({
               embeds: [
                 getMintCapacityChangedEmbed(minted, mint, blockNumber, value),
@@ -207,7 +208,7 @@ export const processGroupEvents = (
             });
             break;
           case "OpeningAdded":
-            const addedOpeningId = data[0] as OpeningId;
+            const addedOpeningId = data[0] as unknown as OpeningId;
             const addedOpeningObject = await getOpening(
               api,
               section,
@@ -225,6 +226,7 @@ export const processGroupEvents = (
             channel.send({
               embeds: [
                 getOpeningAddedEmbed(
+                  addedOpeningId, 
                   addedOpeningText,
                   addedOpeningObject,
                   blockNumber,
@@ -234,7 +236,7 @@ export const processGroupEvents = (
             });
             break;
           case "OpeningFilled":
-            const filledOpeningId = data[0] as OpeningId;
+            const filledOpeningId = data[0] as unknown as OpeningId;
             const hiredWorkerId = Object.values(
               JSON.parse(data[1].toString())
             )[0] as number;
@@ -298,7 +300,7 @@ export const processGroupEvents = (
           case "TerminatedLeader":
           case "TerminatedWorker":
             const terminatedId = data[0] as WorkerId;
-            const terminatedReason = (data[1] as RationaleText).toHuman();
+            const terminatedReason = 'N/A'; // Olympia doesn't hahve this field
             const terminatedIdWorker = await getWorker(
               api,
               section,
@@ -322,7 +324,7 @@ export const processGroupEvents = (
             break;
           case "WorkerExited":
             const exitedId = data[0] as WorkerId;
-            const exitedReason = (data[1] as RationaleText).toString();
+            const exitedReason = 'N/A'; // Olympia doesn't hahve this field
             const exitedIdWorker = await getWorker(
               api,
               section,

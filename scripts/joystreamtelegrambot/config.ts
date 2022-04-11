@@ -45,21 +45,22 @@ export const channelNames: ChannelNames = {
   videos: "video-bot",
   general: "general",
 
-  // groups https://github.com/Joystream/joystream/blob/giza/node/src/chain_spec/mod.rs#L302-L350
-  contentWorkingGroup: "content-curator",
-  storageWorkingGroup: "storage-provider",
+  // groups https://github.com/Joystream/joystream/blob/c57054eebe5da4f683134dbdaaecf50263ec7336/cli/src/Types.ts#L53-L63
+  contentWorkingGroup: "curators",
+  storageWorkingGroup: "storageProviders",
+  forumWorkingGroup: "forum",
+  membershipWorkingGroup: "membership",
   distributionWorkingGroup: "distributors",
-  gatewayWorkingGroup: "gateways",
-  operationsWorkingGroupAlpha: "operations",
-  operationsWorkingGroupGamma: "kpis",
-  operationsWorkingGroupBeta: "content-creator",
+  gatewayWorkingGroup: "gateway",
+  operationsWorkingGroupAlpha: "builders",
+  operationsWorkingGroupGamma: "humanResources",
+  operationsWorkingGroupBeta: "marketing",
 };
 
 export const wgEvents = [
   "ApplicationTerminated",
   "ApplicationWithdrawn",
   "AppliedOnOpening",
-  "BeganApplicationReview",
   "LeaderSet",
   "LeaderUnset",
   "MintCapacityChanged",

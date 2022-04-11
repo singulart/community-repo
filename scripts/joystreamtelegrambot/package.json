@@ -24,7 +24,7 @@
     "tests": "ts-node src/tests.ts"
   },
   "dependencies": {
-    "@joystream/types": "^0.17.1",
+    "@joystream/types": "^0.18.3",
     "@polkadot/api": "^5.9.1",
     "axios": "^0.21.1",
     "discord.js": "^13.6.0",
